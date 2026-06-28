@@ -1,0 +1,378 @@
+ <!DOCTYPE html>
+ <html lang="zh-CN">
+ <head>
+ <meta charset="utf-8" />
+ <meta name="viewport" content="width=device-width, initial-scale=1" />
+ <title>Java 学习知识库</title>
+ <style>
+  :root {
+    --sidebar-w: 260px;
+    --bg: #1e1e2e;
+    --bg-sidebar: #181825;
+    --border: #313244;
+    --text: #cdd6f4;
+    --text-muted: #a6adc8;
+    --link: #89b4fa;
+    --accent: #89b4fa;
+    --code-bg: #11111b;
+    --error-bg: #2e1014;
+    --error-text: #f38ba8;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+    --font-mono: "Cascadia Code", "Fira Code", "JetBrains Mono", Consolas, monospace;
+  }
+   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+   html { scroll-behavior: smooth; }
+   body {
+     font-family: var(--font);
+     font-size: 15px;
+     line-height: 1.65;
+     color: var(--text);
+     background: var(--bg);
+   }
+ 
+   .page { display: flex; min-height: 100vh; }
+ 
+   #sidebar {
+     width: var(--sidebar-w);
+     min-width: var(--sidebar-w);
+     background: var(--bg-sidebar);
+     border-right: 1px solid var(--border);
+     position: sticky;
+     top: 0;
+     height: 100vh;
+     overflow-y: auto;
+     display: flex;
+     flex-direction: column;
+   }
+   .sidebar-inner { padding: 12px 16px 24px; }
+   .sidebar-inner h2 {
+     font-size: 13px;
+     text-transform: uppercase;
+     letter-spacing: 0.04em;
+     color: var(--text-muted);
+     margin: 0 0 12px 0;
+     font-weight: 600;
+   }
+   .tree { list-style: none; font-size: 13px; line-height: 1.4; }
+   .tree ul { list-style: none; padding-left: 16px; }
+   .tree li { padding: 0; }
+   .tree .folder {
+     color: var(--text-muted);
+     font-weight: 600;
+     padding: 3px 0;
+     cursor: default;
+     font-size: 12px;
+     text-transform: uppercase;
+     letter-spacing: 0.03em;
+   }
+   .tree .file a {
+     display: block;
+     padding: 3px 4px;
+     text-decoration: none;
+     color: var(--text);
+     border-radius: 4px;
+     font-size: 13px;
+     white-space: nowrap;
+     overflow: hidden;
+     text-overflow: ellipsis;
+   }
+   .tree .file a:hover { background: #313244; }
+   .tree .file .size-muted { color: var(--text-muted); font-size: 11px; margin-left: 4px; }
+ 
+   #main { flex: 1; min-width: 0; padding: 24px 32px; max-width: 960px; }
+ 
+   .top-bar {
+     display: flex;
+     align-items: center;
+     gap: 12px;
+     padding-bottom: 16px;
+     border-bottom: 1px solid var(--border);
+     margin-bottom: 24px;
+     flex-wrap: wrap;
+   }
+   .top-bar h1 { font-size: 20px; font-weight: 700; margin-right: auto; }
+   .top-bar .stats { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+ 
+   .search-wrap { position: relative; }
+   .search-wrap input {
+     padding: 6px 10px 6px 30px;
+     border: 1px solid var(--border);
+     border-radius: 6px;
+     font-size: 13px;
+     width: 200px;
+     font-family: var(--font);
+     outline: none;
+   }
+   .search-wrap input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(43,108,176,0.15); }
+   .search-wrap .search-icon {
+     position: absolute; left: 8px; top: 50%; transform: translateY(-50%);
+     color: var(--text-muted); font-size: 14px; pointer-events: none;
+   }
+   .search-result-count { font-size: 11px; color: var(--text-muted); margin-left: 4px; display: none; }
+ 
+   .toggle-group { display: flex; gap: 0; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
+   .toggle-group button {
+     padding: 5px 12px;
+     border: none;
+     background: var(--bg);
+     cursor: pointer;
+     font-size: 12px;
+     font-family: var(--font);
+     color: var(--text-muted);
+     transition: all 0.15s;
+   }
+   .toggle-group button.active { background: var(--accent); color: white; }
+   .toggle-group button:hover:not(.active) { background: #313244; }
+ 
+   .file-section {
+     padding: 20px 0;
+     border-top: 1px solid var(--border);
+     scroll-margin-top: 16px;
+   }
+   .file-section:first-of-type { border-top: none; padding-top: 0; }
+   .file-section h2 {
+     font-size: 15px;
+     font-weight: 600;
+     margin-bottom: 12px;
+   }
+   .file-section .file-meta {
+     font-size: 11px;
+     color: var(--text-muted);
+     margin-bottom: 12px;
+   }
+   .file-body { max-width: 100%; overflow-x: auto; }
+   .file-body h1, .file-body h2, .file-body h3 { margin: 16px 0 8px; }
+   .file-body h1:first-child, .file-body h2:first-child, .file-body h3:first-child { margin-top: 0; }
+   .file-body h1 { font-size: 1.5em; }
+   .file-body h2 { font-size: 1.25em; }
+   .file-body h3 { font-size: 1.1em; }
+   .file-body p { margin: 8px 0; }
+   .file-body ul, .file-body ol { padding-left: 24px; margin: 6px 0; }
+   .file-body a { color: var(--link); text-decoration: none; }
+   .file-body a:hover { text-decoration: underline; }
+   .file-body pre {
+     background: var(--code-bg);
+     padding: 12px 16px;
+     border-radius: 6px;
+     overflow-x: auto;
+     font-size: 13px;
+     line-height: 1.5;
+     margin: 10px 0;
+   }
+   .file-body code {
+     font-family: var(--font-mono);
+     font-size: 0.9em;
+   }
+   .file-body :not(pre) > code {
+     background: var(--code-bg);
+     padding: 1px 5px;
+     border-radius: 4px;
+   }
+   .file-body table {
+     border-collapse: collapse;
+     width: 100%;
+     margin: 10px 0;
+     font-size: 13px;
+   }
+   .file-body th, .file-body td {
+     border: 1px solid var(--border);
+     padding: 6px 10px;
+     text-align: left;
+   }
+   .file-body th { background: var(--bg-sidebar); font-weight: 600; }
+   .file-body blockquote {
+     border-left: 3px solid var(--accent);
+     padding-left: 12px;
+     color: var(--text-muted);
+     margin: 10px 0;
+   }
+   .back-top { margin-top: 16px; font-size: 12px; }
+   .back-top a { color: var(--text-muted); text-decoration: none; }
+   .back-top a:hover { color: var(--accent); }
+   .error { color: var(--error-text); background: var(--error-bg); padding: 12px; border-radius: 6px; }
+ 
+   #llm-view { display: none; }
+   #llm-text {
+     width: 100%;
+     height: 75vh;
+     font-family: var(--font-mono);
+     font-size: 12px;
+     border: 1px solid var(--border);
+     border-radius: 6px;
+     padding: 16px;
+     resize: vertical;
+     line-height: 1.5;
+     background: #11111b;
+   }
+   .copy-hint { margin-top: 8px; font-size: 12px; color: var(--text-muted); }
+ 
+   .tree-top { margin-bottom: 24px; font-size: 13px; }
+   .tree-top details { margin-bottom: 8px; }
+   .tree-top summary { cursor: pointer; font-weight: 600; color: var(--text-muted); }
+   .tree-top ul { list-style: none; padding-left: 20px; margin-top: 4px; }
+   .tree-top ul a { text-decoration: none; color: var(--link); font-size: 13px; }
+   .tree-top ul a:hover { text-decoration: underline; }
+ 
+   .file-section.hidden-search { display: none; }
+ 
+   @media (max-width: 768px) {
+     .page { flex-direction: column; }
+     #sidebar { width: 100%; min-width: 100%; height: auto; position: static; border-right: none; border-bottom: 1px solid var(--border); }
+     #main { padding: 16px; }
+     .search-wrap input { width: 160px; }
+     .top-bar h1 { font-size: 17px; }
+   }
+ </style>
+ </head>
+ <body>
+ <div class="page">
+ 
+   <nav id="sidebar">
+     <div class="sidebar-inner">
+       <h2>{{ total_files }} 个文件</h2>
+       <ul class="tree">
+         <li><div class="folder">📁 {{ knowledge_root }}</div>
+           <ul>
+             {% macro render_tree(node, depth) -%}
+               {% for key, val in node.items()|sort if key != '__files__' %}
+                 <li>
+                   <div class="folder">📂 {{ key }}</div>
+                   <ul>
+                     {{- render_tree(val, depth + 1) -}}
+                   </ul>
+                 </li>
+               {% endfor %}
+               {% for f in node.get('__files__', [])|sort(attribute='rel') %}
+                 <li class="file">
+                   <a href="#file-{{ f.anchor }}" title="{{ f.rel }}">
+                     📄 {{ f.rel.split('/')[-1] }}<span class="size-muted">{{ f.size_human }}</span>
+                   </a>
+                 </li>
+               {% endfor %}
+             {%- endmacro %}
+             {{ render_tree(tree, 1) }}
+           </ul>
+         </li>
+       </ul>
+     </div>
+   </nav>
+ 
+   <main id="main">
+     <div class="top-bar">
+       <h1>Java 学习知识库</h1>
+       <span class="stats">{{ total_files }} 个文件</span>
+       <div class="search-wrap">
+         <span class="search-icon">🔍</span>
+         <input type="text" id="search-input" placeholder="搜索所有文件..." oninput="doSearch()" />
+         <span class="search-result-count" id="search-count"></span>
+       </div>
+       <div class="toggle-group">
+         <button id="btn-human" class="active" onclick="showView('human')">👤 人类视图</button>
+         <button id="btn-llm" onclick="showView('llm')">🤖 LLM 视图</button>
+       </div>
+     </div>
+ 
+     <div id="human-view">
+       <div class="tree-top">
+         {% macro render_tree_top(node) -%}
+           {% for key, val in node.items()|sort if key != '__files__' %}
+             <details>
+               <summary>{{ key }}</summary>
+               <ul>
+                 {{- render_tree_top(val) -}}
+               </ul>
+             </details>
+           {% endfor %}
+           {% for f in node.get('__files__', [])|sort(attribute='rel') %}
+             <ul style="padding-left: 20px;"><li><a href="#file-{{ f.anchor }}">📄 {{ f.rel.split('/')[-1] }}</a></li></ul>
+           {% endfor %}
+         {%- endmacro %}
+         {{ render_tree_top(tree) }}
+       </div>
+ 
+       {% for f in files %}
+       <section class="file-section" id="file-{{ f.anchor }}" data-search-content="{{ f.raw|e }}">
+         <h2>📄 {{ f.rel }}</h2>
+         <div class="file-meta">{{ f.size_human }}</div>
+         <div class="file-body">{{ f.html|safe }}</div>
+         <div class="back-top"><a href="#">↑ 回到顶部</a></div>
+       </section>
+       {% endfor %}
+ 
+       {% if not files %}
+       <p style="color: var(--text-muted); padding: 40px 0; text-align: center;">
+         暂无笔记。在知识库目录中创建 <code>.md</code> 文件即可。
+       </p>
+       {% endif %}
+     </div>
+ 
+     <div id="llm-view">
+       <p style="margin-bottom: 8px; font-size: 14px;">将下方文本复制粘贴到 Claude / ChatGPT / 任意 LLM 进行分析：</p>
+       <textarea id="llm-text" readonly>{{ llm_text }}</textarea>
+       <div class="copy-hint">
+         💡 点击文本框后 Ctrl+A 全选，Ctrl+C 复制。
+       </div>
+     </div>
+   </main>
+ </div>
+ 
+ <script>
+ function showView(view) {
+   var humanView = document.getElementById('human-view');
+   var llmView = document.getElementById('llm-view');
+   var btnHuman = document.getElementById('btn-human');
+   var btnLlm = document.getElementById('btn-llm');
+   if (view === 'human') {
+     humanView.style.display = 'block';
+     llmView.style.display = 'none';
+     btnHuman.classList.add('active');
+     btnLlm.classList.remove('active');
+   } else {
+     humanView.style.display = 'none';
+     llmView.style.display = 'block';
+     btnHuman.classList.remove('active');
+     btnLlm.classList.add('active');
+     setTimeout(function() {
+       var ta = document.getElementById('llm-text');
+       ta.focus();
+       ta.select();
+     }, 100);
+   }
+ }
+ 
+ function doSearch() {
+   var query = document.getElementById('search-input').value.toLowerCase().trim();
+   var sections = document.querySelectorAll('.file-section');
+   var countEl = document.getElementById('search-count');
+   var visible = 0;
+   sections.forEach(function(s) {
+     if (!query) {
+       s.classList.remove('hidden-search');
+       visible++;
+     } else {
+       var content = s.getAttribute('data-search-content') || '';
+       if (content.toLowerCase().indexOf(query) >= 0) {
+         s.classList.remove('hidden-search');
+         visible++;
+       } else {
+         s.classList.add('hidden-search');
+       }
+     }
+   });
+   if (query) {
+     countEl.style.display = 'inline';
+     countEl.textContent = '(' + visible + ' 个匹配)';
+   } else {
+     countEl.style.display = 'none';
+   }
+ }
+ 
+ document.addEventListener('keydown', function(e) {
+   if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+     e.preventDefault();
+     document.getElementById('search-input').focus();
+   }
+ });
+ </script>
+ </body>
+ </html>
